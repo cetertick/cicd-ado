@@ -67,6 +67,86 @@ O terminal vai gerar um output similar:
     Crie a secret AZURE_CREDENTIALS (Repository Secrets)
     Name: AZURE_CREDENTIALS
     Value: Cole o JSON limpo que você copiou (somente de { até })
-    Clique em Create ADD Secret
+    Clique em ADD Secret
 
-    
+
+A "metade" da nosa Pipeline (CI) está pronta:
+ - Código alterado ➔ GitHub detecta.
+ - Build e Teste ➔ GitHub Actions roda.
+ - Pacote (Imagem) ➔ Salvo no Azure Container Registry (ACR).
+
+Agora vamos montar a outra "metade" (CD) no Azure DevOps.
+É aqui que vamos pegar esse pacote e fazer o deploy no Kubernetes.
+
+ - Criar a Pipeline de Release
+    Acesse seu projeto no dev.azure.com.
+
+Passo 1: Criar o Projeto (O "Container" do trabalho)
+Preencha o formulário da sua imagem assim:
+
+Project name: Digite ToggleMaster-Aula.
+
+Description: Pode deixar em branco.
+
+Visibility: Mantenha Private (cadeado).
+
+Clique no botão Create project.
+
+
+Passo 2: Conectar o ADO com a Azure (Service Connection)
+Agora que o projeto foi criado, você cairá na tela de "Summary" dele. Precisamos dar permissão para esse projeto mexer na sua conta Azure (onde está o Kubernetes).
+
+Olhe para o canto inferior esquerdo da tela e clique na engrenagem ⚙️ Project settings.
+
+Na coluna da esquerda, role para baixo até achar a seção Pipelines. Clique em Service connections.
+
+Clique no botão azul Create service connection (no centro ou topo direito).
+
+Selecione Azure Resource Manager e clique em Next.
+
+Selecione Workload Identity federation (automatic) e clique em Next.
+
+Nota: Como você está logado na mesma conta que criou a Azure, ele vai achar tudo sozinho.
+
+Subscription: Aguarde carregar e selecione a sua assinatura (provavelmente "Azure subscription 1" ou "Free Trial").
+
+Resource Group: Selecione rg-togglemaster-aula.
+
+Service connection name: Digite ConexaoAzureAula.
+
+Importante: Marque a caixinha Grant access permission to all pipelines.
+
+Clique em Save.
+
+
+
+
+
+Passo 3: Criar a Pipeline de Release
+Agora vamos montar a esteira que pega o código do GitHub e joga no cluster.
+
+No menu lateral esquerdo (volte para o menu principal se ainda estiver em Settings), clique em Pipelines ➔ Releases.
+
+Clique em New pipeline.
+
+Vai abrir uma gaveta lateral direita ("Select a template"). Clique em Empty job (o primeiro da lista).
+
+Onde diz "Stage 1", mude o nome para Deploy Dev. Pode fechar a janelinha do estágio.
+
+A. Definir de onde vem o código (Artifact)
+Clique na caixa grande à esquerda onde diz Add an artifact.
+
+Source type: Escolha GitHub (o ícone do gato).
+
+Nota: Vai aparecer um botão Authorize. Clique nele e autorize o acesso à sua conta GitHub.
+
+Depois de autorizado:
+
+Repository: Digite ou selecione cetertick/cicd-ado.
+
+Default branch: main.
+
+Default version: Latest from default branch.
+
+Clique em Add.
+

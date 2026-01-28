@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-deployment
+  labels:
+    app: auth
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth
+  template:
+    metadata:
+      labels:
+        app: auth
+    spec:
+      containers:
+      - name: auth
+        # DICA PRO ALUNO: O ADO ou o K8s precisa saber onde baixar a imagem.
+        # Substitua 'acraulatogglemaster' pelo nome real do seu ACR se precisar.
+        image: acraulatogglemaster.azurecr.io/auth-service:latest
+        ports:
+        - containerPort: 3000
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "250m"
+            memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+spec:
+  type: LoadBalancer # Cria um IP público na Azure para acessarmos
+  ports:
+  - port: 80
+    targetPort: 3000
+  selector:
+    app: auth
