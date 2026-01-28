@@ -1,0 +1,37 @@
+name: CI Auth Service
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'src/auth/**' # Só roda se mexer na pasta auth
+  workflow_dispatch: # Permite rodar manualmente se precisar
+
+env:
+  # O nome do seu Registry criado no Terraform
+  ACR_NAME: acraulatogglemaster
+  IMAGE_NAME: auth-service
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do Código
+        uses: actions/checkout@v3
+
+      - name: Login na Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Login no ACR
+        run: az acr login --name ${{ env.ACR_NAME }}
+
+      - name: Build e Push Docker
+        uses: docker/build-push-action@v4
+        with:
+          context: src/auth
+          push: true
+          tags: |
+            ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:latest
